@@ -78,3 +78,37 @@ std::vector<double> Ineration(CSR_matrix& A, std::vector<double>& b, double tau,
     }
     return x;
 };
+
+
+std::vector<double> Chebyshev(CSR_matrix& A, std::vector<double>& b, double lambda_min, double lambda_max, std::vector<double> x0, double breakpoint)
+{
+    std::vector<double> x=x0;
+    std::vector<double> r=b-A*x;
+    int Tn=128;
+    std::vector<double> root(Tn);
+    std::vector<double> index(Tn);
+    index[0]=0;
+    int k=Tn;
+    index[Tn/k]=1;
+    for(int i=2; i<7; i++)
+    {
+        for(int j=0; j<Tn; j+=k)
+        {
+            index[j+k/2]=Tn/(k/2)-1-index[j];
+        }
+        k/=2;
+    }
+    for(int i=0; i<Tn; i++)
+    {
+        root[i]=(lambda_max+lambda_min)/2+(lambda_max-lambda_min)*cos((M_PI*(2*i+1))/(2*Tn))/2;
+    }
+    while(breakpoint<norm2(r))
+    {
+        for(int i=0; i<Tn; i++)
+        {
+            x=x+r/root[index[i]];
+            r=b-A*x;
+        }
+    }
+    return x;
+};
