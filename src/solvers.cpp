@@ -85,12 +85,13 @@ std::vector<double> Chebyshev(CSR_matrix& A, std::vector<double>& b, double lamb
     std::vector<double> x=x0;
     std::vector<double> r=b-A*x;
     int Tn=128;
+    int deg=7;
     std::vector<double> root(Tn);
     std::vector<double> index(Tn);
     index[0]=0;
-    int k=Tn;
-    index[Tn/k]=1;
-    for(int i=2; i<7; i++)
+    int k=Tn/4;
+    index[Tn/2]=1;
+    for(int i=2; i<deg; i++)
     {
         for(int j=0; j<Tn; j+=k)
         {
