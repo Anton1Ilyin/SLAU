@@ -41,6 +41,7 @@ std::vector<double> GZ(CSR_matrix& A, std::vector<double>& b, std::vector<double
     {
         for(int i=0; i<x.size(); i++)
         {
+            z=0.0;
             for(int j=A.atRow(i); j<A.atRow(i+1); j++)
             {
                 if(i!=A.atCol(j))
@@ -110,6 +111,57 @@ std::vector<double> Chebyshev(CSR_matrix& A, std::vector<double>& b, double lamb
             x=x+r/root[index[i]];
             r=b-A*x;
         }
+    }
+    return x;
+};
+
+std::vector<double> SGZ(CSR_matrix& A, std::vector<double>& b, std::vector<double> x0, double breakpoint)
+{
+    std::vector<double> x=x0;
+    CSR_matrix d=invdiag(A);
+    double r=norm2(A*x-b);
+    double z;
+    while(breakpoint<r)
+    {
+        for(int i=0; i<x.size(); i++)
+        {
+            z=0;
+            for(int j=A.atRow(i); j<A.atRow(i+1); j++)
+            {
+                if(i!=A.atCol(j))
+                {
+                    z+=A.atVal(j)*x[A.atCol(j)];
+                }
+            }
+            x[i]=d.atVal(i)*(b[i]-z);
+        }
+        for(int i=x.size()-1; i>0; i--)
+        {
+            z=0;
+            for(int j=A.atRow(i); j<A.atRow(i+1); j++)
+            {
+                if(i!=A.atCol(j))
+                {
+                    z+=A.atVal(j)*x[A.atCol(j)];
+                }
+            }
+            x[i]=d.atVal(i)*(b[i]-z);
+        }
+        r=norm2(A*x-b);
+    }
+    return x;
+};
+
+std::vector<double> Gradient(CSR_matrix& A, std::vector<double>& b, std::vector<double> x0, double breakpoint)
+{
+    std::vector<double> x=x0;
+    std::vector<double> r=b-A*x;
+    double tau=r*r/(r*(A*r));
+    while(breakpoint<norm2(r))
+    {
+        x=x+r*tau;
+        r=b-A*x;
+        tau=r*r/(r*(A*r));
     }
     return x;
 };
