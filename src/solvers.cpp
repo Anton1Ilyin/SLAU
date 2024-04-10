@@ -87,8 +87,10 @@ std::vector<double> Chebyshev(CSR_matrix& A, std::vector<double>& b, double lamb
     std::vector<double> r=b-A*x;
     int Tn=128;
     int deg=7;
+    double c=cos(M_PI/Tn);
+    double s=sin(M_PI/Tn);
     std::vector<double> root(Tn);
-    std::vector<double> index(Tn);
+    std::vector<int> index(Tn);
     index[0]=0;
     int k=Tn/4;
     index[Tn/2]=1;
@@ -100,9 +102,10 @@ std::vector<double> Chebyshev(CSR_matrix& A, std::vector<double>& b, double lamb
         }
         k/=2;
     }
-    for(int i=0; i<Tn; i++)
+    root[0]=(lambda_max+lambda_min)/2+(lambda_max-lambda_min)*cos(M_PI/(2*Tn))/2;
+    for(int i=1; i<Tn; i++)
     {
-        root[i]=(lambda_max+lambda_min)/2+(lambda_max-lambda_min)*cos((M_PI*(2*i+1))/(2*Tn))/2;
+        root[i]=(lambda_max+lambda_min)/2+(lambda_max-lambda_min)/2*(root[i-1]*c-s*sqrt(1-root[i-1]*root[i]));
     }
     while(breakpoint<norm2(r))
     {
@@ -162,6 +165,84 @@ std::vector<double> Gradient(CSR_matrix& A, std::vector<double>& b, std::vector<
         x=x+r*tau;
         r=b-A*x;
         tau=r*r/(r*(A*r));
+    }
+    return x;
+};
+
+std::vector<double> ChebSGZ(CSR_matrix& A, std::vector<double>& b, int n, double rho, std::vector<double> x0, double breakpoint)
+{
+    std::vector<double> x=x0;
+    CSR_matrix d=invdiag(A);
+    double r=norm2(A*x-b);
+    double z;
+    std::vector<double> mu(n);
+    mu[0]=1;
+    mu[1]=1/rho;
+    for(int i=2; i<n; i++)
+    {
+        mu[i]=2/rho*(mu[i-1]-mu[i-2]);
+    }
+    std::vector<double> y0=x0;
+    std::vector<double> y1;
+    for(int i=0; i<x.size(); i++)
+    {
+        z=0;
+        for(int j=A.atRow(i); j<A.atRow(i+1); j++)
+        {
+            if(i!=A.atCol(j))
+            {
+                z+=A.atVal(j)*x[A.atCol(j)];
+            }
+        }
+        x[i]=d.atVal(i)*(b[i]-z);
+    }
+    for(int i=x.size()-1; i>0; i--)
+    {
+        z=0;
+        for(int j=A.atRow(i); j<A.atRow(i+1); j++)
+        {
+            if(i!=A.atCol(j))
+            {
+                z+=A.atVal(j)*x[A.atCol(j)];
+            }
+        }
+        x[i]=d.atVal(i)*(b[i]-z);
+    }
+    y1=x;
+    r=norm2(A*x-b);
+    while(breakpoint<r)
+    {
+        for(int k=0; k<n-1; k++)
+        {
+            for(int i=0; i<x.size(); i++)
+            {
+                z=0;
+                for(int j=A.atRow(i); j<A.atRow(i+1); j++)
+                {
+                    if(i!=A.atCol(j))
+                    {
+                        z+=A.atVal(j)*x[A.atCol(j)];
+                    }
+                }
+                x[i]=d.atVal(i)*(b[i]-z);
+            }
+            for(int i=x.size()-1; i>0; i--)
+            {
+                z=0;
+                for(int j=A.atRow(i); j<A.atRow(i+1); j++)
+                {
+                    if(i!=A.atCol(j))
+                    {
+                        z+=A.atVal(j)*x[A.atCol(j)];
+                    }
+                }
+                x[i]=d.atVal(i)*(b[i]-z);
+            }
+            x=x*(2*mu[k]/rho/mu[k+1])-y0*(mu[k-1]/mu[k+1]/rho);
+            y0=y1;
+            y1=x;
+            r=norm2(A*x-b);
+        } 
     }
     return x;
 };
