@@ -246,3 +246,27 @@ std::vector<double> ChebSGZ(CSR_matrix& A, std::vector<double>& b, int n, double
     }
     return x;
 };
+
+std::vector<double> ConjGradient(CSR_matrix& A, std::vector<double>& b, std::vector<double> x0, double breakpoint)
+{
+    std::vector<double> x=x0;
+    std::vector<double> r=b-A*x;
+    std::vector<double> d=r;
+    double tau;
+    while(breakpoint<norm2(r))
+    {
+        tau=r*r/(d*(A*d));
+        x=x-d*tau;
+        r=b-A*x;
+        if(norm2(d)==0)
+        {
+            break;
+        }
+        else
+        {
+            tau=d*d/(r*r);
+            d=r+d*tau;
+        }
+    }
+    return x;
+};
