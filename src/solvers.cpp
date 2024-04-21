@@ -295,6 +295,7 @@ class Arnoldi
         std::vector<double> t;
         std::vector<int> col, row;
         std::vector<double> val;
+        vecs.push_back(v);
         row.push_back(0);
         int c=0;
         for(int j=0; j<i; j++)
@@ -314,6 +315,7 @@ class Arnoldi
             c++;
             row.push_back(c);
             v=t/h;
+            vecs.push_back(v);
         }
         H=CSR_matrix(val,col,row).transpose();
     }
