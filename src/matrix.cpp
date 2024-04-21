@@ -324,6 +324,50 @@ class CSR_matrix
         }
         return CSR_matrix(v,c,r);
     }
+    CSR_matrix transpose()
+    {
+        int N=0;
+        for(int i=0; i<column.size(); i++)
+        if(column[i]>N)
+        N=column[i];
+        N++;
+        std::vector<double> vT; 
+        std::vector<int> cT, rT;
+        for(int i=0; i<val.size(); i++)
+        {
+            if(column[i]+2<N+1)
+            {
+                rT[column[i]+2]++;
+            }
+        }
+        for(int i=1;i<N;i++)
+        {
+            rT[i+1]+=rT[i];
+        }
+        for(int i=0; i<row.size()-1;i++)
+        {
+            for(int j=row[i]; j<row[i+1]; j++)
+            {
+                int k=rT[column[i]+1];
+                vT[k]=val[i];
+                cT[k]=i;
+                rT[column[i]+1]++;
+            }
+        }
+        return CSR_matrix(vT, cT, rT);
+    }
+    CSR_matrix()
+    {
+        row={};
+        val={};
+        column={};
+    } 
+    CSR_matrix& operator=(const CSR_matrix& right)
+    {
+        val=right.val;
+        column=right.column;
+        row=right.row;
+    }
 };
 
 

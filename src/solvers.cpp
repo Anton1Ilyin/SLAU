@@ -270,3 +270,51 @@ std::vector<double> ConjGradient(CSR_matrix& A, std::vector<double>& b, std::vec
     }
     return x;
 };
+
+class Arnoldi
+{
+    private:
+    std::vector<std::vector<double>> vecs;
+    CSR_matrix H;
+    public:
+    CSR_matrix get_H()
+    {
+        return H;
+    }
+    std::vector<std::vector<double>> get_vecs()
+    {
+        return vecs;
+    }
+    std::vector<double> get_vec(int i)
+    {
+        return vecs[i];
+    }
+    Arnoldi(CSR_matrix A, std::vector<double> b, std::vector<double> x0, int i)
+    {
+        std::vector<double> v=(A*x0-b)/norm2(A*x0-b);
+        std::vector<double> t;
+        std::vector<int> col, row;
+        std::vector<double> val;
+        row.push_back(0);
+        int c=0;
+        for(int j=0; j<i; j++)
+        {
+            t=A*v;
+            double h;
+            for(int k=0; k<=j; k++)
+            {
+                h=v*t;
+                val.push_back(h);
+                col.push_back(k);
+                c++;
+                t=t-v*h;
+            }
+            val.push_back(norm2(t));
+            col.push_back(j+1);
+            c++;
+            row.push_back(c);
+            v=t/h;
+        }
+        H=CSR_matrix(val,col,row).transpose();
+    }
+};
