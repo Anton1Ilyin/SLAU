@@ -276,6 +276,7 @@ class Arnoldi
     private:
     std::vector<std::vector<double>> vecs;
     CSR_matrix H;
+    std::vector<CSR_matrix> rots;
     public:
     CSR_matrix get_H()
     {
@@ -289,33 +290,56 @@ class Arnoldi
     {
         return vecs[i];
     }
+    std::vector<CSR_matrix> get_rots()
+    {
+        return rots;
+    }
+    CSR_matrix get_rot(int i)
+    {
+        return rots[i];
+    }
     Arnoldi(CSR_matrix A, std::vector<double> b, std::vector<double> x0, int i)
     {
         std::vector<double> v=(A*x0-b)/norm2(A*x0-b);
         std::vector<double> t;
         std::vector<int> col, row;
         std::vector<double> val;
-        vecs.push_back(v);
+        vecs.resize(i+1);
+        rots.resize(i);
+        vecs[0]=v;
         row.push_back(0);
-        int c=0;
-        for(int j=0; j<i; j++)
+        for(int j=0; j<i-1; j++)
         {
+            std::vector<double> a(i,0);
             t=A*v;
             double h;
             for(int k=0; k<=j; k++)
             {
                 h=v*t;
-                val.push_back(h);
-                col.push_back(k);
-                c++;
+                a[k]=h;
                 t=t-v*h;
             }
-            val.push_back(norm2(t));
-            col.push_back(j+1);
-            c++;
-            row.push_back(c);
+            a[j+1]=norm2(t);
             v=t/h;
-            vecs.push_back(v);
+            vecs[j+1]=v;
+            for(int k=0; k<j; k++)
+            {
+                a=rots[k]*a;
+            }
+            CSR_matrix T(j,i,a[j],a[j+1]);
+            rots[j]=T;
+            a=T*a;
+            int z=0;
+            for(int k=0; k<=j; k++)
+            {
+                if(a[k]!=0)
+                {
+                    val.push_back(a[k]);
+                    col.push_back(k);
+                    z++;
+                }
+            }
+            row.push_back(row[j]+z);
         }
         H=CSR_matrix(val,col,row).transpose();
     }

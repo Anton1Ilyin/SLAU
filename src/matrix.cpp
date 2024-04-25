@@ -368,6 +368,36 @@ class CSR_matrix
         column=right.column;
         row=right.row;
     }
+    CSR_matrix(int j, int i, double alpha, double beta)
+    {
+        double s=beta/sqrt(alpha*alpha+beta*beta), c=alpha/sqrt(alpha*alpha+beta*beta);
+        row.push_back(0);
+        for(int k=0; k<i; k++)
+        {
+            if(k==j)
+            {
+                val.push_back(c);
+                column.push_back(k);
+                val.push_back(s);
+                column.push_back(k+1);
+                row.push_back(row[k]+2);
+            }
+            else if(k==j+1)
+            {
+                val.push_back(-s);
+                column.push_back(k-1);
+                val.push_back(c);
+                column.push_back(k);
+                row.push_back(row[k]+2);
+            }
+            else
+            {
+                val.push_back(1);
+                column.push_back(k);
+                row.push_back(row[k]+1);
+            }
+        }
+    }
 };
 
 
